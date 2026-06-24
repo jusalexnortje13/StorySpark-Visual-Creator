@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A child-friendly visual story planner that creates beginning, middle and ending images." />
+  <title>StorySpark Visual Creator</title>
+  <style>
+    :root{
+      --navy:#173552;
+      --teal:#157a83;
+      --teal-dark:#0d5c64;
+      --sky:#dff5f6;
+      --gold:#f3bd4b;
+      --coral:#ef826f;
+      --cream:#fffaf0;
+      --paper:#ffffff;
+      --line:#cfe0e5;
+      --muted:#607586;
+      --green:#2c8064;
+      --danger:#a93b43;
+      --shadow:0 16px 40px rgba(24,66,89,.12);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Trebuchet MS", Arial, sans-serif;
+      color:var(--navy);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(243,189,75,.27) 0 4%, transparent 4.2%),
+        radial-gradient(circle at 93% 7%, rgba(21,122,131,.16) 0 5%, transparent 5.2%),
+        linear-gradient(135deg,#f5fcfd 0%,#fff9eb 100%);
+    }
+
+    button, input, textarea, select{font:inherit}
+    button{touch-action:manipulation}
+    a{color:inherit}
+
+    .hero{
+      width:min(1180px,94%);
+      margin:0 auto;
+      padding:34px 0 20px;
+      text-align:center;
+    }
+    .brand{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:7px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:0 8px 22px rgba(24,66,89,.08);
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+    h1{
+      margin:18px 0 10px;
+      font-size:clamp(2.25rem,6vw,4.7rem);
+      line-height:1;
+      letter-spacing:-2px;
+    }
+    .hero p{
+      max-width:790px;
+      margin:0 auto;
+      color:var(--muted);
+      font-size:1.1rem;
+      line-height:1.55;
+    }
+
+    main{
+      width:min(1180px,94%);
+      margin:0 auto 50px;
+    }
+
+    .notice{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      max-width:960px;
+      margin:0 auto 22px;
+      padding:15px 17px;
+      border-radius:18px;
+      background:#fff4cc;
+      border:2px solid #e9ca68;
+      line-height:1.45;
+    }
+    .notice strong{display:block;margin-bottom:2px}
+
+    .card{
+      background:rgba(255,255,255,.97);
+      border:1px solid var(--line);
+      border-radius:26px;
+      box-shadow:var(--shadow);
+      padding:clamp(18px,4vw,30px);
+      margin:20px 0;
+    }
+
+    .step-heading{
+      display:flex;
+      align-items:center;
+      gap:13px;
+      margin-bottom:18px;
+    }
+    .step-number{
+      display:grid;
+      place-items:center;
+      width:46px;
+      height:46px;
+      flex:none;
+      border-radius:50%;
+      background:var(--teal);
+      color:#fff;
+      font-size:1.3rem;
+      font-weight:900;
+      box-shadow:0 6px 15px rgba(21,122,131,.22);
+    }
+    h2{margin:0;font-size:clamp(1.35rem,3vw,1.85rem)}
+    .helper{margin:4px 0 0;color:var(--muted);line-height:1.45}
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+    .field.full{grid-column:1/-1}
+    label{
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:7px;
+    }
+    .optional{
+      font-size:.77rem;
+      font-weight:800;
+      color:var(--muted);
+      background:#eef3f5;
+      border-radius:99px;
+      padding:3px 7px;
+    }
+    input, textarea, select{
+      width:100%;
+      border:2px solid var(--line);
+      border-radius:15px;
+      padding:12px 13px;
+      color:var(--navy);
+      background:#fffefb;
+      outline:none;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    textarea{min-height:92px;resize:vertical;line-height:1.45}
+    input:focus, textarea:focus, select:focus{
+      border-color:#51a9b0;
+      box-shadow:0 0 0 4px rgba(21,122,131,.12);
+    }
+    .field-note{
+      color:var(--muted);
+      font-size:.84rem;
+      line-height:1.35;
+    }
+
+    .style-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:10px;
+    }
+    .style-choice{
+      border:2px solid var(--line);
+      border-radius:17px;
+      min-height:105px;
+      padding:13px 9px;
+      cursor:pointer;
+      background:#fffef9;
+      color:var(--navy);
+      font-weight:900;
+      text-align:center;
+      transition:.16s;
+    }
+    .style-choice:hover{transform:translateY(-2px);border-color:#87bdc2}
+    .style-choice.selected{
+      background:var(--sky);
+      border-color:var(--teal);
+      box-shadow:0 0 0 4px rgba(21,122,131,.10);
+    }
+    .style-icon{display:block;font-size:2rem;margin-bottom:7px}
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:11px;
+      margin-top:20px;
+    }
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius:15px;
+      padding:13px 19px;
+      cursor:pointer;
+      background:var(--teal);
+      color:#fff;
+      font-weight:900;
+      box-shadow:0 7px 16px rgba(21,122,131,.20);
+      transition:.16s transform,.16s opacity;
+    }
+    .btn:hover:not(:disabled){transform:translateY(-2px)}
+    .btn:focus-visible{outline:4px solid rgba(21,122,131,.25);outline-offset:2px}
+    .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+    .btn.gold{background:#c9890c}
+    .btn.secondary{
+      background:#fff;
+      color:var(--teal-dark);
+      border:2px solid var(--teal);
+      box-shadow:none;
+    }
+    .btn.danger{
+      background:#fff;
+      color:var(--danger);
+      border:2px solid #dc9ca1;
+      box-shadow:none;
+    }
+
+    .scene-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:15px;
+    }
+    .scene-plan{
+      border:2px solid var(--line);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .scene-top{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      padding:12px 14px;
+      background:linear-gradient(135deg,var(--sky),#fff7d9);
+      font-weight:900;
+    }
+    .scene-top .badge{
+      background:var(--gold);
+      color:#563a00;
+      border-radius:99px;
+      padding:5px 9px;
+      font-size:.78rem;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+    }
+    .scene-plan textarea{
+      border:0;
+      border-radius:0;
+      min-height:175px;
+      background:#fff;
+    }
+
+    .teacher-box{
+      display:grid;
+      grid-template-columns:minmax(180px,320px) 1fr;
+      gap:15px;
+      align-items:end;
+      margin-top:18px;
+      padding:15px;
+      background:#f1f7f8;
+      border-radius:17px;
+      border:1px solid var(--line);
+    }
+
+    .loading{
+      display:none;
+      text-align:center;
+      padding:24px 15px;
+      border-radius:19px;
+      background:#eef9f9;
+      margin-top:20px;
+    }
+    .spinner{
+      width:48px;
+      height:48px;
+      border:6px solid #cde8ea;
+      border-top-color:var(--teal);
+      border-radius:50%;
+      margin:0 auto 13px;
+      animation:spin .9s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading p{margin:5px auto;color:var(--muted);max-width:620px;line-height:1.5}
+    .progress-dots{font-size:1.45rem;letter-spacing:6px;color:var(--teal);animation:pulse 1.3s ease-in-out infinite}
+    @keyframes pulse{50%{opacity:.35}}
+
+    .status{
+      display:none;
+      margin-top:16px;
+      padding:13px 15px;
+      border-radius:14px;
+      line-height:1.45;
+    }
+    .status.error{display:block;background:#fff0f1;border:2px solid #e4a4aa;color:#7e2931}
+    .status.success{display:block;background:#eef9f4;border:2px solid #9dceb9;color:#215d49}
+
+    #resultsCard{display:none}
+    .storyboard-wrap{
+      border:3px solid var(--navy);
+      border-radius:20px;
+      overflow:hidden;
+      background:#e8eef1;
+      box-shadow:0 12px 24px rgba(24,66,89,.12);
+    }
+    #storyboardImage{
+      width:100%;
+      display:block;
+      min-height:250px;
+      object-fit:cover;
+      background:linear-gradient(135deg,#d9eef0,#fff0c6);
+    }
+
+    .image-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+      margin-top:19px;
+    }
+    .image-card{
+      border:2px solid var(--line);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .image-label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:11px 13px;
+      background:#f5fafb;
+      font-weight:900;
+    }
+    .image-label span:first-child{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+    }
+    .image-card canvas{
+      display:block;
+      width:100%;
+      aspect-ratio:1/1;
+      background:#edf3f5;
+    }
+    .image-card .mini-actions{
+      padding:11px;
+      text-align:center;
+    }
+    .mini-btn{
+      border:2px solid var(--teal);
+      background:#fff;
+      color:var(--teal-dark);
+      border-radius:12px;
+      padding:9px 11px;
+      cursor:pointer;
+      font-weight:900;
+    }
+
+    .writing-prompts{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:13px;
+      margin-top:18px;
+    }
+    .writing-prompt{
+      padding:14px;
+      background:#fffaf0;
+      border:1px solid #ecd9a9;
+      border-radius:16px;
+      line-height:1.45;
+    }
+    .writing-prompt strong{display:block;margin-bottom:5px}
+
+    details{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:13px 15px;
+      background:#fbfdfd;
+    }
+    summary{cursor:pointer;font-weight:900}
+    .prompt-text{
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:var(--muted);
+      line-height:1.45;
+      margin-top:10px;
+      font-family:Arial,sans-serif;
+      font-size:.9rem;
+    }
+
+    footer{
+      width:min(1000px,92%);
+      margin:0 auto;
+      padding:0 0 34px;
+      text-align:center;
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.5;
+    }
+
+    @media(max-width:820px){
+      .style-grid{grid-template-columns:repeat(2,1fr)}
+      .scene-grid,.image-grid,.writing-prompts{grid-template-columns:1fr}
+      .scene-plan textarea{min-height:120px}
+      .teacher-box{grid-template-columns:1fr}
+    }
+    @media(max-width:620px){
+      .form-grid{grid-template-columns:1fr}
+      .field.full{grid-column:auto}
+      h1{letter-spacing:-1px}
+      .card{border-radius:20px}
+    }
+
+    @media print{
+      body{background:#fff}
+      .hero,.notice,#plannerCard,#imageCreatorCard,.results-actions,details,footer{display:none!important}
+      main{width:100%;margin:0}
+      #resultsCard{display:block!important;border:0;box-shadow:none;padding:0;margin:0}
+      .image-grid{grid-template-columns:repeat(3,1fr)}
+      .writing-prompts{grid-template-columns:repeat(3,1fr)}
+      .mini-actions{display:none}
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="brand">✨ STORYSPARK VISUAL CREATOR</div>
+    <h1>Turn Your Plan Into Pictures</h1>
+    <p>Enter your story ideas, check the beginning, middle and ending, and create three matching pictures to guide your writing.</p>
+  </header>
+
+  <main>
+    <div class="notice">
+      <div style="font-size:1.55rem" aria-hidden="true">🛡️</div>
+      <div>
+        <strong>Use AI safely.</strong>
+        Create fictional characters only. Do not enter your real name, another learner’s name, photographs, private information or anything unkind. A teacher must supervise image generation.
+      </div>
+    </div>
+
+    <section class="card" id="plannerCard">
+      <div class="step-heading">
+        <div class="step-number">1</div>
+        <div>
+          <h2>Add your story ideas</h2>
+          <p class="helper">You may type ideas from a story generator, a planning sheet, or your own imagination.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="character">🧑 Main character</label>
+          <textarea id="character" maxlength="300" placeholder="Example: A brave young navigator who explores unknown seas" required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="appearance">🎨 Character appearance</label>
+          <textarea id="appearance" maxlength="300" placeholder="Example: Curly black hair, yellow raincoat, blue backpack and red boots"></textarea>
+          <div class="field-note">Visual details help the character stay consistent in all three pictures.</div>
+        </div>
+
+        <div class="field">
+          <label for="supporting">👥 Supporting characters <span class="optional">optional</span></label>
+          <textarea id="supporting" maxlength="300" placeholder="Example: A cautious engineer and a friendly robot"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="setting">🌍 Setting</label>
+          <textarea id="setting" maxlength="300" placeholder="Example: A glowing lost city beneath the ocean" required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="object">🎁 Important object or goal <span class="optional">optional</span></label>
+          <textarea id="object" maxlength="300" placeholder="Example: Find a crystal compass before the oxygen runs out"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="problem">⚠️ Problem or conflict</label>
+          <textarea id="problem" maxlength="400" placeholder="Example: Supplies are dangerously low and someone on the team hides the final oxygen tank" required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="twist">🌀 Twist <span class="optional">optional</span></label>
+          <textarea id="twist" maxlength="300" placeholder="Example: The history books were wrong—the city is still inhabited"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="solution">✅ Solution</label>
+          <textarea id="solution" maxlength="400" placeholder="Example: The navigator solves the city’s puzzle, finds a clean energy source and rebuilds trust in the team" required></textarea>
+        </div>
+
+        <div class="field full">
+          <label>🖌️ Choose an illustration style</label>
+          <div class="style-grid" role="group" aria-label="Illustration style">
+            <button type="button" class="style-choice selected" data-style="warm, colourful children's storybook illustration with expressive characters and detailed environments">
+              <span class="style-icon">📚</span>Storybook
+            </button>
+            <button type="button" class="style-choice" data-style="dynamic, age-appropriate comic-book illustration with bold shapes, clear action and cinematic framing">
+              <span class="style-icon">💥</span>Comic Book
+            </button>
+            <button type="button" class="style-choice" data-style="gentle watercolour children's-book illustration with soft textures, rich atmosphere and clear storytelling">
+              <span class="style-icon">🎨</span>Watercolour
+            </button>
+            <button type="button" class="style-choice" data-style="polished 3D animated family-film style with friendly characters, expressive lighting and detailed scenery">
+              <span class="style-icon">🎬</span>3D Animation
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn gold" id="exampleBtn" type="button">🌊 Load an Example</button>
+        <button class="btn" id="planBtn" type="button">🧩 Plan My 3 Scenes</button>
+        <button class="btn secondary" id="clearBtn" type="button">Start Again</button>
+      </div>
+      <div class="status" id="plannerStatus" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="imageCreatorCard">
+      <div class="step-heading">
+        <div class="step-number">2</div>
+        <div>
+          <h2>Check your three scenes</h2>
+          <p class="helper">Read each scene carefully. You may change the wording before creating the pictures.</p>
+        </div>
+      </div>
+
+      <div class="scene-grid">
+        <article class="scene-plan">
+          <div class="scene-top"><span class="badge">Beginning</span> 🌅 Introduce the story</div>
+          <textarea id="beginningScene" maxlength="700" placeholder="Your beginning scene will appear here."></textarea>
+        </article>
+        <article class="scene-plan">
+          <div class="scene-top"><span class="badge">Middle</span> ⚡ Show the problem</div>
+          <textarea id="middleScene" maxlength="700" placeholder="Your middle scene will appear here."></textarea>
+        </article>
+        <article class="scene-plan">
+          <div class="scene-top"><span class="badge">Ending</span> 🌟 Show the solution</div>
+          <textarea id="endingScene" maxlength="700" placeholder="Your ending scene will appear here."></textarea>
+        </article>
+      </div>
+
+      <div class="teacher-box">
+        <div class="field">
+          <label for="classCode">🔐 Class code</label>
+          <input id="classCode" type="password" maxlength="40" autocomplete="off" placeholder="Ask your teacher" />
+          <div class="field-note">The class code protects the teacher’s image-generation account.</div>
+        </div>
+        <div>
+          <div class="field-note" style="margin-bottom:8px">
+            The AI creates one wide storyboard containing three matching panels. The website then separates it into three individual images.
+          </div>
+          <button class="btn" id="generateBtn" type="button" disabled>✨ Create My 3 Images</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loadingBox" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <strong>Your story pictures are being illustrated…</strong>
+        <p>This may take up to two minutes. Please keep this page open and do not press the button again.</p>
+        <div class="progress-dots" aria-hidden="true">● ● ●</div>
+      </div>
+      <div class="status" id="generateStatus" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="resultsCard">
+      <div class="step-heading">
+        <div class="step-number">3</div>
+        <div>
+          <h2>Your visual story</h2>
+          <p class="helper">Use the pictures to guide your own writing. The pictures are a plan—not the finished story.</p>
+        </div>
+      </div>
+
+      <div class="storyboard-wrap">
+        <img id="storyboardImage" alt="A three-panel AI-generated storyboard showing the beginning, middle and ending." />
+      </div>
+
+      <div class="image-grid">
+        <article class="image-card">
+          <div class="image-label"><span>🌅 Beginning</span><span>1</span></div>
+          <canvas id="canvasBeginning" width="1024" height="1024"></canvas>
+          <div class="mini-actions"><button class="mini-btn" data-download="beginning">Download Beginning</button></div>
+        </article>
+        <article class="image-card">
+          <div class="image-label"><span>⚡ Middle</span><span>2</span></div>
+          <canvas id="canvasMiddle" width="1024" height="1024"></canvas>
+          <div class="mini-actions"><button class="mini-btn" data-download="middle">Download Middle</button></div>
+        </article>
+        <article class="image-card">
+          <div class="image-label"><span>🌟 Ending</span><span>3</span></div>
+          <canvas id="canvasEnding" width="1024" height="1024"></canvas>
+          <div class="mini-actions"><button class="mini-btn" data-download="ending">Download Ending</button></div>
+        </article>
+      </div>
+
+      <div class="writing-prompts">
+        <div class="writing-prompt"><strong>Beginning writing prompt</strong>Who is the main character? Where are they? What do they want?</div>
+        <div class="writing-prompt"><strong>Middle writing prompt</strong>What goes wrong? How does the character react? How does the tension grow?</div>
+        <div class="writing-prompt"><strong>Ending writing prompt</strong>How is the problem solved? What changes? What does the character learn?</div>
+      </div>
+
+      <div class="actions results-actions">
+        <button class="btn" id="downloadAllBtn" type="button">⬇ Download All 3 Images</button>
+        <button class="btn secondary" onclick="window.print()" type="button">🖨 Print Visual Plan</button>
+        <button class="btn danger" id="newStoryBtn" type="button">Create a New Story</button>
+      </div>
+
+      <details>
+        <summary>Teacher view: see the prompt used</summary>
+        <div class="prompt-text" id="promptView"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    StorySpark Visual Creator does not save learner names or story plans in the browser. Generated content should be reviewed by a teacher before classroom use.
+  </footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fields = ["character","appearance","supporting","setting","object","problem","twist","solution"];
+  let selectedStyle = document.querySelector(".style-choice.selected").dataset.style;
+  let currentImageData = "";
+  let currentPrompt = "";
+
+  function value(id){ return $(id).value.trim(); }
+
+  function showStatus(element, message, type="error"){
+    element.className = `status ${type}`;
+    element.textContent = message;
+  }
+
+  function hideStatus(element){
+    element.className = "status";
+    element.textContent = "";
+  }
+
+  function coreReady(){
+    return ["character","setting","problem","solution"].every(id => value(id));
+  }
+
+  function scenesReady(){
+    return ["beginningScene","middleScene","endingScene"].every(id => value(id));
+  }
+
+  function updateGenerateButton(){
+    $("generateBtn").disabled = !(coreReady() && scenesReady() && value("classCode"));
+  }
+
+  document.querySelectorAll(".style-choice").forEach(button => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".style-choice").forEach(b => b.classList.remove("selected"));
+      button.classList.add("selected");
+      selectedStyle = button.dataset.style;
+    });
+  });
+
+  [...fields, "beginningScene","middleScene","endingScene","classCode"].forEach(id => {
+    $(id).addEventListener("input", updateGenerateButton);
+  });
+
+  $("exampleBtn").addEventListener("click", () => {
+    $("character").value = "A brave young navigator exploring unknown seas";
+    $("appearance").value = "A ten-year-old child with curly black hair, a bright yellow diving suit, blue backpack and red boots";
+    $("supporting").value = "A cautious young engineer and a small friendly underwater robot";
+    $("setting").value = "A glowing lost city beneath the ocean, filled with coral towers and ancient machines";
+    $("object").value = "Find a crystal compass before the oxygen supplies run out";
+    $("problem").value = "The supplies are dangerously low, and one member of the team hides the final oxygen tank";
+    $("twist").value = "The history books were wrong—the lost city is still inhabited by peaceful guardians";
+    $("solution").value = "The navigator solves the city’s puzzle, discovers a clean energy source and rebuilds trust within the team";
+    hideStatus($("plannerStatus"));
+    buildScenes();
+  });
+
+  function buildScenes(){
+    hideStatus($("plannerStatus"));
+    if(!coreReady()){
+      showStatus($("plannerStatus"), "Please complete the main character, setting, problem and solution first.");
+      return;
+    }
+    const character = value("character");
+    const setting = value("setting");
+    const object = value("object");
+    const problem = value("problem");
+    const twist = value("twist");
+    const solution = value("solution");
+    const supporting = value("supporting");
+
+    $("beginningScene").value =
+      `${character} arrives at ${setting}. ` +
+      (supporting ? `The character is joined by ${supporting}. ` : "") +
+      (object ? `The goal is to ${lowerFirst(object)}. ` : "") +
+      `The scene introduces the adventure and includes a subtle clue that trouble may soon begin.`;
+
+    $("middleScene").value =
+      `The situation becomes serious when ${lowerFirst(problem)}. ` +
+      `${character} attempts to respond, but the first plan does not completely work. ` +
+      (twist ? `Then the character discovers that ${lowerFirst(twist)}. ` : "") +
+      `Show strong emotion, action and rising tension while keeping the scene suitable for children.`;
+
+    $("endingScene").value =
+      `${character} succeeds when ${lowerFirst(solution)}. ` +
+      `Show clearly that the main problem has been resolved, the characters are safe, and the ending feels hopeful and satisfying.`;
+
+    showStatus($("plannerStatus"), "Your three scenes are ready. Check or edit them below.", "success");
+    $("imageCreatorCard").scrollIntoView({behavior:"smooth", block:"start"});
+    updateGenerateButton();
+  }
+
+  function lowerFirst(text){
+    if(!text) return "";
+    return text.charAt(0).toLowerCase() + text.slice(1);
+  }
+
+  $("planBtn").addEventListener("click", buildScenes);
+
+  $("clearBtn").addEventListener("click", resetAll);
+  $("newStoryBtn").addEventListener("click", resetAll);
+
+  function resetAll(){
+    fields.forEach(id => $(id).value = "");
+    ["beginningScene","middleScene","endingScene","classCode"].forEach(id => $(id).value = "");
+    currentImageData = "";
+    currentPrompt = "";
+    $("storyboardImage").removeAttribute("src");
+    $("resultsCard").style.display = "none";
+    hideStatus($("plannerStatus"));
+    hideStatus($("generateStatus"));
+    updateGenerateButton();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function collectPayload(){
+    return {
+      classCode:value("classCode"),
+      character:value("character"),
+      appearance:value("appearance"),
+      supporting:value("supporting"),
+      setting:value("setting"),
+      object:value("object"),
+      problem:value("problem"),
+      twist:value("twist"),
+      solution:value("solution"),
+      beginning:value("beginningScene"),
+      middle:value("middleScene"),
+      ending:value("endingScene"),
+      style:selectedStyle
+    };
+  }
+
+  $("generateBtn").addEventListener("click", async () => {
+    hideStatus($("generateStatus"));
+
+    if(!coreReady() || !scenesReady()){
+      showStatus($("generateStatus"), "Complete the story information and all three scene descriptions first.");
+      return;
+    }
+    if(!value("classCode")){
+      showStatus($("generateStatus"), "Enter the class code supplied by your teacher.");
+      return;
+    }
+
+    $("generateBtn").disabled = true;
+    $("loadingBox").style.display = "block";
+
+    try{
+      const response = await fetch("/.netlify/functions/generate-story", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(collectPayload())
+      });
+
+      let data = {};
+      try{ data = await response.json(); }catch(e){}
+
+      if(!response.ok){
+        throw new Error(data.error || `The image service returned an error (${response.status}).`);
+      }
+      if(!data.image){
+        throw new Error("The image service did not return a picture.");
+      }
+
+      currentImageData = data.image;
+      currentPrompt = data.prompt || "";
+      $("promptView").textContent = currentPrompt;
+      $("storyboardImage").src = currentImageData;
+
+      await new Promise((resolve, reject) => {
+        $("storyboardImage").onload = resolve;
+        $("storyboardImage").onerror = () => reject(new Error("The generated image could not be displayed."));
+      });
+
+      cropStoryboard($("storyboardImage"));
+      $("resultsCard").style.display = "block";
+      showStatus($("generateStatus"), "Your three story images are ready!", "success");
+      $("resultsCard").scrollIntoView({behavior:"smooth", block:"start"});
+    }catch(error){
+      showStatus($("generateStatus"), error.message || "The pictures could not be created. Please ask your teacher for help.");
+    }finally{
+      $("loadingBox").style.display = "none";
+      updateGenerateButton();
+    }
+  });
+
+  function cropStoryboard(image){
+    const canvases = [
+      $("canvasBeginning"),
+      $("canvasMiddle"),
+      $("canvasEnding")
+    ];
+    const panelWidth = image.naturalWidth / 3;
+    const panelHeight = image.naturalHeight;
+
+    canvases.forEach((canvas,index) => {
+      const ctx = canvas.getContext("2d");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(
+        image,
+        panelWidth * index, 0, panelWidth, panelHeight,
+        0, 0, canvas.width, canvas.height
+      );
+    });
+  }
+
+  function downloadCanvas(canvas, filename){
+    canvas.toBlob(blob => {
+      if(!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, "image/jpeg", .92);
+  }
+
+  document.querySelectorAll("[data-download]").forEach(button => {
+    button.addEventListener("click", () => {
+      const name = button.dataset.download;
+      const map = {
+        beginning:"canvasBeginning",
+        middle:"canvasMiddle",
+        ending:"canvasEnding"
+      };
+      downloadCanvas($(map[name]), `StorySpark_${capitalize(name)}.jpg`);
+    });
+  });
+
+  $("downloadAllBtn").addEventListener("click", async () => {
+    const items = [
+      [$("canvasBeginning"),"StorySpark_Beginning.jpg"],
+      [$("canvasMiddle"),"StorySpark_Middle.jpg"],
+      [$("canvasEnding"),"StorySpark_Ending.jpg"]
+    ];
+    for(const [canvas,name] of items){
+      downloadCanvas(canvas,name);
+      await new Promise(resolve => setTimeout(resolve,350));
+    }
+  });
+
+  function capitalize(text){
+    return text.charAt(0).toUpperCase()+text.slice(1);
+  }
+
+  updateGenerateButton();
+})();
+</script>
+</body>
+</html>
