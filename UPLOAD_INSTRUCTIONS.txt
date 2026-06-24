@@ -1,0 +1,21 @@
+STORYSPARK 504 TIMEOUT FIX — GITHUB UPLOAD STEPS
+
+1. Open your GitHub StorySpark-Visual-Creator repository.
+2. Delete the old package-lock.json file from the repository. This prevents the old dependency lock from being reused.
+3. Delete the old netlify/functions/generate-story.js file. The new website does not use it.
+4. Use Add file → Upload files.
+5. Drag ALL contents of this fix folder into the repository. Keep the netlify/functions and _shared folders intact.
+6. Commit the upload directly to main with the message: Fix image generation timeout
+7. Netlify should deploy automatically. If not, use Deploys → Trigger deploy → Clear cache and deploy site.
+8. Do not change or re-enter OPENAI_API_KEY or TEACHER_PIN. Existing Netlify environment variables remain in place.
+
+The new required structure includes:
+- index.html
+- package.json
+- .npmrc
+- netlify.toml
+- netlify/functions/create-story-job.js
+- netlify/functions/generate-story-background.js
+- netlify/functions/story-status.js
+- netlify/functions/delete-story-job.js
+- netlify/functions/_shared/story-utils.js

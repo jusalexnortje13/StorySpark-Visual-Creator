@@ -96,3 +96,10 @@ AI image composition is not perfectly predictable. Generate again, or use the fu
 
 **The character changes slightly.**  
 Add detailed visual information in the “Character appearance” field and generate again.
+
+
+## Version 1.1 timeout fix
+
+This version uses a Netlify Background Function and Netlify Blobs. The browser starts a temporary job, polls its status, and removes the stored result after it has loaded. This avoids the 60-second limit of a normal synchronous Netlify Function.
+
+The default image size is `1536x512`, which creates three 512×512 panels and reduces latency and API cost. You can override it with the optional Netlify variable `OPENAI_IMAGE_SIZE`.

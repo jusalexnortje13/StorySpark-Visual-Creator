@@ -572,7 +572,7 @@
       <div class="loading" id="loadingBox" aria-live="polite">
         <div class="spinner" aria-hidden="true"></div>
         <strong>Your story pictures are being illustrated…</strong>
-        <p>This may take up to two minutes. Please keep this page open and do not press the button again.</p>
+        <p id="loadingMessage">This can take several minutes. Please keep this page open while StorySpark prepares the three pictures.</p>
         <div class="progress-dots" aria-hidden="true">● ● ●</div>
       </div>
       <div class="status" id="generateStatus" role="status" aria-live="polite"></div>
@@ -779,26 +779,45 @@
 
     $("generateBtn").disabled = true;
     $("loadingBox").style.display = "block";
+    $("loadingMessage").textContent = "Starting your illustration…";
+
+    let jobId = "";
+    let jobToken = "";
 
     try{
-      const response = await fetch("/.netlify/functions/generate-story", {
+      const createResponse = await fetch("/.netlify/functions/create-story-job", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify(collectPayload())
       });
 
-      let data = {};
-      try{ data = await response.json(); }catch(e){}
-
-      if(!response.ok){
-        throw new Error(data.error || `The image service returned an error (${response.status}).`);
-      }
-      if(!data.image){
-        throw new Error("The image service did not return a picture.");
+      let createData = {};
+      try{ createData = await createResponse.json(); }catch(e){}
+      if(!createResponse.ok){
+        throw new Error(createData.error || `The story request returned an error (${createResponse.status}).`);
       }
 
-      currentImageData = data.image;
-      currentPrompt = data.prompt || "";
+      jobId = createData.jobId;
+      jobToken = createData.jobToken;
+      if(!jobId || !jobToken){
+        throw new Error("StorySpark could not start the image job.");
+      }
+
+      $("loadingMessage").textContent = "Your story is in the illustration queue…";
+
+      const backgroundResponse = await fetch("/.netlify/functions/generate-story-background", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({jobId})
+      });
+
+      if(!backgroundResponse.ok && backgroundResponse.status !== 202){
+        throw new Error(`The background illustrator could not start (${backgroundResponse.status}).`);
+      }
+
+      const result = await waitForStoryJob(jobId, jobToken);
+      currentImageData = result.image;
+      currentPrompt = result.prompt || "";
       $("promptView").textContent = currentPrompt;
       $("storyboardImage").src = currentImageData;
 
@@ -811,6 +830,11 @@
       $("resultsCard").style.display = "block";
       showStatus($("generateStatus"), "Your three story images are ready!", "success");
       $("resultsCard").scrollIntoView({behavior:"smooth", block:"start"});
+
+      // Remove the finished job from temporary storage after the image is safely loaded.
+      fetch(`/.netlify/functions/delete-story-job?jobId=${encodeURIComponent(jobId)}&token=${encodeURIComponent(jobToken)}`, {
+        method:"DELETE"
+      }).catch(() => {});
     }catch(error){
       showStatus($("generateStatus"), error.message || "The pictures could not be created. Please ask your teacher for help.");
     }finally{
@@ -818,6 +842,44 @@
       updateGenerateButton();
     }
   });
+
+  async function waitForStoryJob(jobId, jobToken){
+    const started = Date.now();
+    const maximumWait = 12 * 60 * 1000;
+
+    while(Date.now() - started < maximumWait){
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      const response = await fetch(
+        `/.netlify/functions/story-status?jobId=${encodeURIComponent(jobId)}&token=${encodeURIComponent(jobToken)}`,
+        {cache:"no-store"}
+      );
+
+      let data = {};
+      try{ data = await response.json(); }catch(e){}
+
+      if(!response.ok){
+        throw new Error(data.error || `StorySpark could not check the image status (${response.status}).`);
+      }
+
+      if(data.status === "done"){
+        if(!data.image) throw new Error("The illustrator finished without returning a picture.");
+        return data;
+      }
+
+      if(data.status === "error"){
+        throw new Error(data.error || "The pictures could not be created.");
+      }
+
+      if(data.status === "processing"){
+        $("loadingMessage").textContent = "The AI illustrator is drawing the beginning, middle and ending…";
+      }else{
+        $("loadingMessage").textContent = "Your story is waiting in the illustration queue…";
+      }
+    }
+
+    throw new Error("The illustration is taking unusually long. Please try again later.");
+  }
 
   function cropStoryboard(image){
     const canvases = [
